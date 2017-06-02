@@ -1,7 +1,7 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Currency formatter plugin. 
+ * Used ro foramt currency inputs
+ * @author alpha-hawk 
  */
 
 (function ($, global, document) {
@@ -10,10 +10,11 @@
     //add different event listener to target
     $.fn.extend({
         formatCurrency: function () {
-            formatCurrency.formatHtml(this);
+            jQuery.each( this, formatCurrency.formatHtml);
             this.on("keydown", formatCurrency.isKeyAllowed);
             this.on("keyup", formatCurrency.format);
             this.on("blur", formatCurrency.checkFormat);
+            this.blur();
         }
     });
 
@@ -46,7 +47,7 @@
                 }
 
                 //modify the currency
-                modifiedCurrency = '$' + currency.replace(/,|\$/g, "").replace(/(\d)(?=(\d{3})+\.)/g, "$1,").replace(/(\.\d{2}).*/g, "$1");
+                modifiedCurrency = formatCurrency.modify(currency);
 
                 //calculate the length differnce in currency throughout the process
                 lengthDiff = modifiedCurrency.length - currency.length;
@@ -68,12 +69,14 @@
 
             var value = this.value;
             if (value.trim()) {
-                while (!value.match(/^\$?(([1-9][0-9]{0,2}(,[0-9]{3})*)|0)?\.[0-9]{1,2}$/g)) {
-                    value = formatCurrency.fixDot(value)
+                
+                while (!value.match(/^\$.(([0-9]{0,3}(,[0-9]{3})*)|0)?\.[0-9]{1,2}$/g)) {
+                    value = formatCurrency.fixDot(value);
+                    value = formatCurrency.modify(value);
                 }
 
                 if (value.search(/\$/g) === -1)
-                    value = '$' + value;
+                    value = '$ ' + value;
 
                 jQuery(this).val(value);
                 jQuery(this).siblings().val(value.replace(/,|\$/g, ''));
@@ -109,12 +112,33 @@
             }
         },
 
-        formatHtml: function (element) {
-            var name = element.prop('name');
-            element.prop('name', '');
-            element.wrap("<div class='" + this.config.containerClass + "'></div>");
+        formatHtml: function (index, element) {
+            var name = element.name;
+            element.name = '';
+            $(element).wrap("<div class='" + formatCurrency.config.containerClass + "'></div>");
             $("<input type='hidden' name='" + name + "'>").insertAfter(element);
+        },
+        
+        modify: function(currency){
+            return '$ ' + currency.replace(/,|\$/g, "").replace(/(\d)(?=(\d{3})+\.)/g, "$1,").replace(/(\.\d{2}).*/g, "$1");
+        },
+        formatValue: function(value){
+            value = value.toString();
+            if (value.trim()) {
+                
+                while (!value.match(/^\$.(([0-9]{0,3}(,[0-9]{3})*)|0)?\.[0-9]{1,2}$/g)) {
+                    value = formatCurrency.fixDot(value);
+                    value = formatCurrency.modify(value);
+                }
+
+                if (value.search(/\$/g) === -1)
+                    value = '$ ' + value;
+
+                return value;
+            }
         }
-    }
+        
+    };
 
 })(jQuery, window, document);
+
